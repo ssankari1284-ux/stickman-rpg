@@ -203,21 +203,52 @@ class MapScene extends Phaser.Scene {
       return;
     }
 
-    // クリア済みのノード（戦闘・イベント・訪問済みショップ）
-    if ((node.type === 'battle' || node.type === 'event' || node.type === 'shop') && node.cleared) {
+    // クリア済みの戦闘ノード：「再戦」として押せる状態を維持
+    if (node.type === 'battle' && node.cleared) {
+      g.fillStyle(c.bg, 0.55);
+      g.fillRoundedRect(x - 60, y - 22, 120, 44, 8);
+      g.lineStyle(2, 0xffffff, 0.25);
+      g.strokeRoundedRect(x - 60, y - 22, 120, 44, 8);
+
+      const btn = this.add.text(x, y, '⚔ 再戦', {
+        fontSize: '13px', fill: '#aaaaaa', fontFamily: 'monospace',
+      }).setOrigin(0.5).setInteractive({ useHandCursor: true }).setDepth(2);
+
+      // クリア済みマーク（右上）
+      this.add.text(x + 52, y - 18, '✓', {
+        fontSize: '11px', fill: '#44ff44', fontFamily: 'monospace',
+      }).setOrigin(0.5).setDepth(3);
+
+      btn.on('pointerover', () => {
+        g.clear();
+        g.fillStyle(c.bg, 0.85);
+        g.fillRoundedRect(x - 60, y - 22, 120, 44, 8);
+        g.lineStyle(2, 0xffffff, 0.7);
+        g.strokeRoundedRect(x - 60, y - 22, 120, 44, 8);
+        btn.setStyle({ fill: '#ffffff' });
+      });
+      btn.on('pointerout', () => {
+        g.clear();
+        g.fillStyle(c.bg, 0.55);
+        g.fillRoundedRect(x - 60, y - 22, 120, 44, 8);
+        g.lineStyle(2, 0xffffff, 0.25);
+        g.strokeRoundedRect(x - 60, y - 22, 120, 44, 8);
+        btn.setStyle({ fill: '#aaaaaa' });
+      });
+      btn.on('pointerdown', () => this.handleNodeTap(node));
+      return;
+    }
+
+    // クリア済みのイベント・ショップ：再訪不可（暗く表示）
+    if ((node.type === 'event' || node.type === 'shop') && node.cleared) {
       g.fillStyle(0x000000, 0.5);
       g.fillRoundedRect(x - 60, y - 22, 120, 44, 8);
       this.add.text(x, y, c.text, {
-        fontSize: '14px',
-        fill: '#666666',
-        fontFamily: 'monospace',
+        fontSize: '14px', fill: '#555555', fontFamily: 'monospace',
       }).setOrigin(0.5).setDepth(2);
-      // クリア済みマーク
       this.add.text(x + 52, y - 18, '✓', {
-        fontSize: '12px',
-        fill: '#44ff44',
-        fontFamily: 'monospace',
-      }).setOrigin(0.5).setDepth(2);
+        fontSize: '11px', fill: '#44ff44', fontFamily: 'monospace',
+      }).setOrigin(0.5).setDepth(3);
       return;
     }
 
