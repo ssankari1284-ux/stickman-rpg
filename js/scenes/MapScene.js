@@ -203,8 +203,8 @@ class MapScene extends Phaser.Scene {
       return;
     }
 
-    // クリア済みのノード
-    if (node.type === 'battle' && node.cleared) {
+    // クリア済みのノード（戦闘・イベント・訪問済みショップ）
+    if ((node.type === 'battle' || node.type === 'event' || node.type === 'shop') && node.cleared) {
       g.fillStyle(0x000000, 0.5);
       g.fillRoundedRect(x - 60, y - 22, 120, 44, 8);
       this.add.text(x, y, c.text, {
@@ -345,11 +345,141 @@ class MapScene extends Phaser.Scene {
       playerData.currentMap = Math.max(playerData.currentMap - 1, 0);
       this.scene.restart();
     } else if (node.type === 'shop') {
-      // 今後：お店画面を追加
-      this.showMessage('お店はまだ準備中です');
+      node.cleared = true; // 訪問済みにしてロック解放
+      this.scene.start('ShopScene', { mapIndex: this.mapIndex });
     } else if (node.type === 'event') {
-      this.showMessage('イベントはまだ準備中です');
+      this.showEvent(node);
     }
+  }
+
+  // イベント発生：ランダムなイベントをオーバーレイで表示
+  showEvent(node) {
+    const cx = this.scale.width / 2;
+
+    const eventTypes = [
+      {
+        icon: '💰', name: '宝箱を発見！',
+        desc: '古びた宝箱がひっそりと\n置かれていた。',
+        choices: [
+          { label: '開ける', apply: () => { playerData.coins += 30; return 'コイン +30 を得た！'; } },
+        ],
+      },
+      {
+        icon: '💧', name: '癒しの泉',
+        desc: '透き通った泉がある。\n飲んでみようか？',
+        choices: [
+          { label: '飲む',    apply: () => { playerData.hp = playerData.maxHp; playerData.sp = playerData.maxSp; return 'HP・SPが全回復した！'; } },
+          { label: '飲まない', apply: () => '先を急いだ。' },
+        ],
+      },
+      {
+        icon: '🗿', name: '謎の像',
+        desc: '怪しい像が立っている。\n触れると何かが起きそうだ…',
+        choices: [
+          { label: '触れる', apply: () => {
+            if (Phaser.Math.Between(0, 1)) { playerData.attack += 2; return '力がみなぎった！ 攻撃力 +2'; }
+            else { playerData.hp = Math.max(1, playerData.hp - 15); return 'のろいを受けた！ HP -15'; }
+          }},
+          { label: '無視する', apply: () => '何もしなかった。' },
+        ],
+      },
+      {
+        icon: '🏕', name: '休憩所',
+        desc: '木陰に小さな休憩所がある。\n休んでいくか？',
+        choices: [
+          { label: '休む（5コイン）', apply: () => {
+            if (playerData.coins >= 5) {
+              playerData.coins -= 5;
+              const heal = Math.floor(playerData.maxHp * 0.5);
+              playerData.hp = Math.min(playerData.maxHp, playerData.hp + heal);
+              return `HP +${heal} 回復！ コイン -5`;
+            }
+            return 'コインが足りない…';
+          }},
+          { label: 'スルー', apply: () => '先を急いだ。' },
+        ],
+      },
+    ];
+
+    const ev = eventTypes[Phaser.Math.Between(0, eventTypes.length - 1)];
+    const panelX = cx - 165;
+    const panelY = 160;
+    const panelW = 330;
+    const panelH = 280;
+    const toDestroy = [];
+
+    // 半透明の黒背景
+    const dimBg = this.add.rectangle(cx, 320, this.scale.width, this.scale.height, 0x000000, 0.72).setDepth(20).setInteractive();
+    toDestroy.push(dimBg);
+
+    // パネル
+    const panel = this.add.graphics().setDepth(21);
+    panel.fillStyle(0x111133, 1);
+    panel.fillRoundedRect(panelX, panelY, panelW, panelH, 12);
+    panel.lineStyle(2, 0x8866cc, 1);
+    panel.strokeRoundedRect(panelX, panelY, panelW, panelH, 12);
+    toDestroy.push(panel);
+
+    // イベント名
+    toDestroy.push(this.add.text(cx, panelY + 22, `${ev.icon} ${ev.name}`, {
+      fontSize: '16px', fill: '#ffff88', fontFamily: 'monospace',
+    }).setOrigin(0.5).setDepth(22));
+
+    // 説明文
+    toDestroy.push(this.add.text(cx, panelY + 62, ev.desc, {
+      fontSize: '13px', fill: '#cccccc', fontFamily: 'monospace', align: 'center',
+    }).setOrigin(0.5).setDepth(22));
+
+    // 結果テキスト（選択後に表示）
+    const resultText = this.add.text(cx, panelY + 155, '', {
+      fontSize: '14px', fill: '#88ff88', fontFamily: 'monospace', align: 'center',
+    }).setOrigin(0.5).setDepth(22);
+    toDestroy.push(resultText);
+
+    // 選択肢ボタン
+    const choiceBtnObjs = [];
+    const choiceStartY = ev.choices.length === 1 ? panelY + 140 : panelY + 115;
+
+    ev.choices.forEach((choice, i) => {
+      const by = choiceStartY + i * 44;
+      const cbg = this.add.graphics().setDepth(22);
+      cbg.fillStyle(0x334466, 1);
+      cbg.fillRoundedRect(cx - 110, by - 14, 220, 28, 6);
+
+      const cb = this.add.text(cx, by, choice.label, {
+        fontSize: '14px', fill: '#ffffff', fontFamily: 'monospace',
+      }).setOrigin(0.5).setInteractive({ useHandCursor: true }).setDepth(23);
+
+      cb.on('pointerdown', () => {
+        const msg = choice.apply();
+        resultText.setText(msg);
+
+        // 選択肢を非表示にする
+        choiceBtnObjs.forEach(({ bg, btn }) => { bg.setVisible(false); btn.setVisible(false); });
+
+        // イベントノードをクリア済みにする
+        node.cleared = true;
+
+        // 閉じるボタンを表示
+        const closeBg = this.add.graphics().setDepth(22);
+        closeBg.fillStyle(0x335533, 1);
+        closeBg.fillRoundedRect(cx - 60, panelY + 222, 120, 28, 6);
+        const closeBtn = this.add.text(cx, panelY + 236, '閉じる', {
+          fontSize: '14px', fill: '#aaffaa', fontFamily: 'monospace',
+        }).setOrigin(0.5).setInteractive({ useHandCursor: true }).setDepth(23);
+
+        closeBtn.on('pointerdown', () => {
+          toDestroy.forEach(o => o.destroy());
+          choiceBtnObjs.forEach(({ bg, btn }) => { bg.destroy(); btn.destroy(); });
+          closeBg.destroy();
+          closeBtn.destroy();
+          this.scene.restart(); // マップを再描画してクリア済みを反映
+        });
+      });
+
+      choiceBtnObjs.push({ bg: cbg, btn: cb });
+      toDestroy.push(cbg, cb);
+    });
   }
 
   // 簡易メッセージ表示
