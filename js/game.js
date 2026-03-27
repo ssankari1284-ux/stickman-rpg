@@ -4,7 +4,7 @@ const config = {
   width: 480,
   height: 640,
   backgroundColor: '#1a1a2e',
-  scene: [TitleScene, MapScene, BattleScene, MenuScene, ShopScene],
+  scene: [TitleScene, MapScene, BattleScene, MenuScene, ShopScene, ParamScene],
 };
 
 // プレイヤーのデータ（ゲーム全体で共有する）
@@ -25,5 +25,14 @@ const playerData = {
   boughtItems: {},                       // 購入済みの永続アイテム
   currentMap: 0,
 };
+
+// ステータス強化コストの設定（ParamSceneから変更可能）
+const upgradeConfig = [
+  { key: 'maxHp',   label: 'HP(最大)',  baseCost: 5,  inc: 2 },
+  { key: 'maxSp',   label: 'SP(最大)',  baseCost: 3,  inc: 2 },
+  { key: 'attack',  label: '攻撃力',    baseCost: 6,  inc: 3 },
+  { key: 'defense', label: '防御力',    baseCost: 5,  inc: 2 },
+  { key: 'agi',     label: '機敏さ',    baseCost: 4,  inc: 2 },
+];
 
 const game = new Phaser.Game(config);

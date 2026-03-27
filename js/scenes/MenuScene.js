@@ -45,15 +45,26 @@ class MenuScene extends Phaser.Scene {
       fontSize: '11px', fill: '#888888', fontFamily: 'monospace',
     }).setOrigin(1, 0);
 
-    // 強化できるステータスの定義
-    // baseCost: 初回の必要XP（低め）, inc: 強化するたびに増えるXP（徐々に高く）
-    const upgrades = [
-      { key: 'maxHp',   label: 'HP(最大)',  baseCost: 5,  inc: 2,  getVal: () => p.maxHp,   apply: () => { p.maxHp += 10; p.hp = Math.min(p.hp + 10, p.maxHp); } },
-      { key: 'maxSp',   label: 'SP(最大)',  baseCost: 3,  inc: 2,  getVal: () => p.maxSp,   apply: () => { p.maxSp += 5;  p.sp = Math.min(p.sp + 5,  p.maxSp); } },
-      { key: 'attack',  label: '攻撃力  ',  baseCost: 6,  inc: 3,  getVal: () => p.attack,  apply: () => { p.attack++;  } },
-      { key: 'defense', label: '防御力  ',  baseCost: 5,  inc: 2,  getVal: () => p.defense, apply: () => { p.defense++; } },
-      { key: 'agi',     label: '機敏さ  ',  baseCost: 4,  inc: 2,  getVal: () => p.agi,     apply: () => { p.agi++;     } },
-    ];
+    // upgradeConfig（game.jsで定義）をもとに強化データを作る
+    const applyFns = {
+      maxHp:   () => { p.maxHp += 10; p.hp = Math.min(p.hp + 10, p.maxHp); },
+      maxSp:   () => { p.maxSp += 5;  p.sp = Math.min(p.sp + 5,  p.maxSp); },
+      attack:  () => { p.attack++;  },
+      defense: () => { p.defense++; },
+      agi:     () => { p.agi++;     },
+    };
+    const getValFns = {
+      maxHp:   () => p.maxHp,
+      maxSp:   () => p.maxSp,
+      attack:  () => p.attack,
+      defense: () => p.defense,
+      agi:     () => p.agi,
+    };
+    const upgrades = upgradeConfig.map(cfg => ({
+      ...cfg,
+      getVal: getValFns[cfg.key],
+      apply:  applyFns[cfg.key],
+    }));
 
     upgrades.forEach((stat, i) => {
       this.createUpgradeRow(stat, 25, 164 + i * 30);
@@ -102,6 +113,15 @@ class MenuScene extends Phaser.Scene {
     learnBtn.on('pointerover', () => learnBtn.setStyle({ fill: '#ffff88' }));
     learnBtn.on('pointerout',  () => learnBtn.setStyle({ fill: '#ffcc44' }));
     learnBtn.on('pointerdown', () => this.showSkillLearnPanel());
+
+    // パラメータ調整ボタン（開発者用）
+    const paramBtn = this.add.text(cx, 478, '⚙ パラメータ調整', {
+      fontSize: '13px', fill: '#aaaaaa', fontFamily: 'monospace',
+      backgroundColor: '#222233', padding: { x: 10, y: 5 },
+    }).setOrigin(0.5).setInteractive({ useHandCursor: true });
+    paramBtn.on('pointerover', () => paramBtn.setStyle({ fill: '#ddddff' }));
+    paramBtn.on('pointerout',  () => paramBtn.setStyle({ fill: '#aaaaaa' }));
+    paramBtn.on('pointerdown', () => this.scene.start('ParamScene'));
 
     // マップへ戻るボタン
     const backBtn = this.add.text(cx, 516, '◀ マップへ戻る', {
