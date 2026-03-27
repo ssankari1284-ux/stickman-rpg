@@ -372,7 +372,12 @@ class MapScene extends Phaser.Scene {
     if (node.type === 'battle') {
       this.scene.start('BattleScene', { node: node, mapIndex: this.mapIndex });
     } else if (node.type === 'next') {
-      playerData.currentMap = Math.min(playerData.currentMap + 1, mapList.length - 1);
+      const nextIndex = playerData.currentMap + 1;
+      if (nextIndex >= mapList.length) {
+        this.showGameClear();
+        return;
+      }
+      playerData.currentMap = nextIndex;
       this.scene.restart();
     } else if (node.type === 'prev') {
       playerData.currentMap = Math.max(playerData.currentMap - 1, 0);
@@ -514,6 +519,45 @@ class MapScene extends Phaser.Scene {
     });
   }
 
+  // ゲームクリア画面を表示
+  showGameClear() {
+    const cx = this.scale.width / 2;
+    const toDestroy = [];
+
+    const dimBg = this.add.rectangle(cx, 320, this.scale.width, this.scale.height, 0x000000, 0.85).setDepth(30).setInteractive();
+    toDestroy.push(dimBg);
+
+    const panel = this.add.graphics().setDepth(31);
+    panel.fillStyle(0x111133, 1);
+    panel.fillRoundedRect(cx - 180, 200, 360, 260, 16);
+    panel.lineStyle(3, 0xffdd44, 1);
+    panel.strokeRoundedRect(cx - 180, 200, 360, 260, 16);
+    toDestroy.push(panel);
+
+    toDestroy.push(this.add.text(cx, 240, 'GAME CLEAR!', {
+      fontSize: '28px', fill: '#ffdd44', fontFamily: 'monospace',
+    }).setOrigin(0.5).setDepth(32));
+
+    toDestroy.push(this.add.text(cx, 290, '魔王を倒し、平和を取り戻した！', {
+      fontSize: '13px', fill: '#cccccc', fontFamily: 'monospace',
+    }).setOrigin(0.5).setDepth(32));
+
+    const p = playerData;
+    toDestroy.push(this.add.text(cx, 328, `Lv.${p.level}  XP:${p.exp}  コイン:${p.coins}`, {
+      fontSize: '13px', fill: '#aaffaa', fontFamily: 'monospace',
+    }).setOrigin(0.5).setDepth(32));
+
+    // タイトルへ戻るボタン
+    const retryBtn = this.add.text(cx, 390, 'タイトルへ戻る', {
+      fontSize: '16px', fill: '#ffffff', fontFamily: 'monospace',
+      backgroundColor: '#334466', padding: { x: 16, y: 8 },
+    }).setOrigin(0.5).setInteractive({ useHandCursor: true }).setDepth(32);
+    retryBtn.on('pointerover', () => retryBtn.setStyle({ fill: '#ffff00' }));
+    retryBtn.on('pointerout',  () => retryBtn.setStyle({ fill: '#ffffff' }));
+    retryBtn.on('pointerdown', () => this.scene.start('TitleScene'));
+    toDestroy.push(retryBtn);
+  }
+
   // 簡易メッセージ表示
   showMessage(text) {
     const cx = this.scale.width / 2;
@@ -550,6 +594,19 @@ const mapList = [
       { type: 'battle', row: 2, col: 1, enemy: 'orc',    cleared: false, connects: [4, 5] },
       { type: 'prev',   row: 3, col: 0,                  connects: [] },
       { type: 'next',   row: 3, col: 2,                  connects: [] },
+    ],
+  },
+  {
+    name: 'ステージ3：魔王の城',
+    nodes: [
+      { type: 'shop',   row: 0, col: 0,                  connects: [2] },
+      { type: 'battle', row: 0, col: 2, enemy: 'orc',    cleared: false, connects: [2] },
+      { type: 'event',  row: 1, col: 1,                  connects: [3, 4] },
+      { type: 'battle', row: 2, col: 0, enemy: 'spider', cleared: false, connects: [5] },
+      { type: 'battle', row: 2, col: 2, enemy: 'orc',    cleared: false, connects: [5] },
+      { type: 'battle', row: 3, col: 1, enemy: 'boss',   cleared: false, connects: [6] },
+      { type: 'prev',   row: 4, col: 0,                  connects: [] },
+      { type: 'next',   row: 4, col: 2,                  connects: [] },
     ],
   },
 ];

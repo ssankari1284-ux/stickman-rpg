@@ -512,4 +512,5 @@ const enemyData = {
   bat:    { name: 'コウモリ', hp: 25, maxHp: 25, attack: 7,  defense: 2, agi: 9,  expReward: 22, coinReward: 10 },
   spider: { name: 'クモ',     hp: 30, maxHp: 30, attack: 9,  defense: 3, agi: 7,  expReward: 30, coinReward: 14 },
   orc:    { name: 'オーク',   hp: 60, maxHp: 60, attack: 14, defense: 6, agi: 4,  expReward: 55, coinReward: 28 },
+  boss:   { name: '魔王',    hp: 120, maxHp: 120, attack: 20, defense: 10, agi: 6, expReward: 120, coinReward: 80 },
 };
