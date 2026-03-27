@@ -223,9 +223,8 @@ class BattleScene extends Phaser.Scene {
       playerData.level++;
       playerData.maxHp += 10;
       playerData.hp = playerData.maxHp;
-      playerData.attack += 2;
-      playerData.defense += 1;
-      this.setMessage(`レベルアップ！ Lv.${playerData.level} になった！`);
+      playerData.statPoints += 3; // ポイントを3つ付与（メニューで自由に振り分け可能）
+      this.setMessage(`レベルアップ！ Lv.${playerData.level} ポイント+3 メニューで振り分けよう！`);
     }
   }
 

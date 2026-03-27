@@ -22,6 +22,7 @@ const playerData = {
   level: 1,
   exp: 0,
   coins: 50,
+  statPoints: 3,                       // 振り分け可能なステータスポイント
   equipment: [null, null, null, null], // 装備スロット（4つ）
   skills: [null, null, null, null],    // スキルスロット（4つ）
   currentMap: 0,
