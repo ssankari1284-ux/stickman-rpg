@@ -10,19 +10,17 @@ const config = {
 // プレイヤーのデータ（ゲーム全体で共有する）
 const playerData = {
   name: '棒人間',
-  hp: 100,
-  maxHp: 100,
-  mp: 30,
-  maxMp: 30,
-  attack: 10,
-  defense: 5,
-  speed: 8,
-  magic: 6,
-  luck: 4,
+  hp: 80,  maxHp: 80,
+  sp: 20,  maxSp: 20,    // SP（スキルを使うためのポイント）
+  attack: 8,
+  defense: 4,
+  agi: 6,                // AGI（機敏さ）：先攻後攻に影響する
   level: 1,
-  exp: 0,
+  exp: 30,               // 勝利で入手。メニューでステータス強化に使う
   coins: 50,
-  statPoints: 3,                       // 振り分け可能なステータスポイント
+  upgradeCount: {        // 各ステータスを何回強化したかを記録
+    maxHp: 0, maxSp: 0, attack: 0, defense: 0, agi: 0,
+  },
   equipment: [null, null, null, null], // 装備スロット（4つ）
   skills: [null, null, null, null],    // スキルスロット（4つ）
   currentMap: 0,

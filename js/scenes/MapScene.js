@@ -118,8 +118,8 @@ class MapScene extends Phaser.Scene {
     g.fillStyle(hpRate > 0.5 ? 0x44cc44 : hpRate > 0.25 ? 0xffaa00 : 0xff4444, 1);
     g.fillRect(80, barY, 200 * hpRate, 14);
 
-    // MP バー
-    const mpRate = p.mp / p.maxMp;
+    // SP バー
+    const mpRate = p.sp / p.maxSp;
     g.fillStyle(0x444444, 1);
     g.fillRect(80, barY + 20, 200, 14);
     g.fillStyle(0x4488ff, 1);
@@ -130,9 +130,9 @@ class MapScene extends Phaser.Scene {
       fontSize: '13px', fill: '#ffffff', fontFamily: 'monospace',
     });
     this.add.text(15, barY + 2, 'HP', { fontSize: '13px', fill: '#88ff88', fontFamily: 'monospace' });
-    this.add.text(15, barY + 22, 'MP', { fontSize: '13px', fill: '#88aaff', fontFamily: 'monospace' });
+    this.add.text(15, barY + 22, 'SP', { fontSize: '13px', fill: '#88aaff', fontFamily: 'monospace' });
     this.add.text(285, barY + 2, `${p.hp}/${p.maxHp}`, { fontSize: '12px', fill: '#ccffcc', fontFamily: 'monospace' });
-    this.add.text(285, barY + 22, `${p.mp}/${p.maxMp}`, { fontSize: '12px', fill: '#aaccff', fontFamily: 'monospace' });
+    this.add.text(285, barY + 22, `${p.sp}/${p.maxSp}`, { fontSize: '12px', fill: '#aaccff', fontFamily: 'monospace' });
     this.add.text(380, barY, `コイン\n${p.coins}`, {
       fontSize: '13px', fill: '#ffdd44', fontFamily: 'monospace', align: 'center',
     }).setOrigin(0.5, 0);

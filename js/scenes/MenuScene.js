@@ -1,4 +1,4 @@
-// メニュー画面（装備・ステータス確認・ポイント振り分け）
+// メニュー画面（ステータス強化・装備・スキル確認）
 class MenuScene extends Phaser.Scene {
   constructor() {
     super({ key: 'MenuScene' });
@@ -9,144 +9,140 @@ class MenuScene extends Phaser.Scene {
     const p = playerData;
 
     // タイトル
-    this.add.text(cx, 25, 'メニュー', {
-      fontSize: '24px', fill: '#ffffff', fontFamily: 'monospace',
+    this.add.text(cx, 22, 'メニュー', {
+      fontSize: '22px', fill: '#ffffff', fontFamily: 'monospace',
     }).setOrigin(0.5);
 
     // ── 基本ステータス表示 ──
-    this.add.text(20, 58, 'ステータス', {
-      fontSize: '16px', fill: '#ffdd66', fontFamily: 'monospace',
+    this.add.text(20, 55, 'ステータス', {
+      fontSize: '15px', fill: '#ffdd66', fontFamily: 'monospace',
+    });
+    this.add.text(25, 76, `${p.name}   Lv.${p.level}`, {
+      fontSize: '13px', fill: '#cccccc', fontFamily: 'monospace',
+    });
+    this.add.text(25, 93, `HP：${p.hp} / ${p.maxHp}   SP：${p.sp} / ${p.maxSp}`, {
+      fontSize: '13px', fill: '#cccccc', fontFamily: 'monospace',
+    });
+    this.add.text(25, 110, `コイン：${p.coins}`, {
+      fontSize: '13px', fill: '#ffdd44', fontFamily: 'monospace',
     });
 
-    this.add.text(25, 80, `${p.name}   Lv.${p.level}`, {
-      fontSize: '14px', fill: '#cccccc', fontFamily: 'monospace',
-    });
-    this.add.text(25, 98, `HP：${p.hp} / ${p.maxHp}   MP：${p.mp} / ${p.maxMp}`, {
-      fontSize: '14px', fill: '#cccccc', fontFamily: 'monospace',
-    });
-    this.add.text(25, 116, `経験値：${p.exp}   コイン：${p.coins}`, {
-      fontSize: '14px', fill: '#cccccc', fontFamily: 'monospace',
-    });
+    // 現在XP（更新対象）
+    this.expText = this.add.text(this.scale.width - 20, 110, `所持XP：${p.exp}`, {
+      fontSize: '13px', fill: '#44ffaa', fontFamily: 'monospace',
+    }).setOrigin(1, 0);
 
     // 仕切り線
     const g = this.add.graphics();
     g.lineStyle(1, 0x4444aa, 1);
-    g.strokeLineShape(new Phaser.Geom.Line(10, 138, this.scale.width - 10, 138));
+    g.strokeLineShape(new Phaser.Geom.Line(10, 130, this.scale.width - 10, 130));
 
-    // ── ステータス振り分けセクション ──
-    this.add.text(20, 148, 'ステータス振り分け', {
-      fontSize: '16px', fill: '#ffdd66', fontFamily: 'monospace',
-    });
-
-    // 残りポイント表示（ボタン操作で更新される）
-    this.pointsText = this.add.text(this.scale.width - 20, 148, `残りポイント：${p.statPoints}`, {
-      fontSize: '14px', fill: '#ffff44', fontFamily: 'monospace',
-    }).setOrigin(1, 0);
-
-    // 振り分け可能なステータス一覧
-    const allocStats = [
-      { key: 'attack',  label: '攻撃力' },
-      { key: 'defense', label: '防御力' },
-      { key: 'speed',   label: '速  度' },
-      { key: 'magic',   label: '魔  法' },
-      { key: 'luck',    label: '運    ' },
-    ];
-
-    allocStats.forEach((stat, i) => {
-      this.createStatRow(stat.label, stat.key, 25, 178 + i * 30);
-    });
-
-    // 仕切り線
-    g.strokeLineShape(new Phaser.Geom.Line(10, 332, this.scale.width - 10, 332));
-
-    // ── 装備スロット ──
-    this.add.text(20, 342, '装備スロット', {
+    // ── ステータス強化セクション ──
+    this.add.text(20, 138, 'ステータス強化', {
       fontSize: '15px', fill: '#ffdd66', fontFamily: 'monospace',
     });
+    this.add.text(this.scale.width - 20, 138, '← XPを使って強化', {
+      fontSize: '11px', fill: '#888888', fontFamily: 'monospace',
+    }).setOrigin(1, 0);
 
+    // 強化できるステータスの定義
+    // baseCost: 初回の必要XP, inc: 強化するたびに増えるXP, effect: 強化内容の説明
+    const upgrades = [
+      { key: 'maxHp',   label: 'HP(最大)',  baseCost: 15, inc: 5,  getVal: () => p.maxHp,   apply: () => { p.maxHp += 10; p.hp = Math.min(p.hp + 10, p.maxHp); } },
+      { key: 'maxSp',   label: 'SP(最大)',  baseCost: 10, inc: 4,  getVal: () => p.maxSp,   apply: () => { p.maxSp += 5;  p.sp = Math.min(p.sp + 5,  p.maxSp); } },
+      { key: 'attack',  label: '攻撃力  ',  baseCost: 20, inc: 6,  getVal: () => p.attack,  apply: () => { p.attack++;  } },
+      { key: 'defense', label: '防御力  ',  baseCost: 15, inc: 5,  getVal: () => p.defense, apply: () => { p.defense++; } },
+      { key: 'agi',     label: '機敏さ  ',  baseCost: 12, inc: 4,  getVal: () => p.agi,     apply: () => { p.agi++;     } },
+    ];
+
+    upgrades.forEach((stat, i) => {
+      this.createUpgradeRow(stat, 25, 164 + i * 30);
+    });
+
+    // XP不足メッセージ（非表示で待機）
+    this.warnText = this.add.text(cx, 318, 'XPが足りません！', {
+      fontSize: '13px', fill: '#ff4444', fontFamily: 'monospace',
+      backgroundColor: '#220000', padding: { x: 8, y: 4 },
+    }).setOrigin(0.5).setVisible(false).setDepth(5);
+
+    // 仕切り線
+    g.strokeLineShape(new Phaser.Geom.Line(10, 326, this.scale.width - 10, 326));
+
+    // ── 装備スロット ──
+    this.add.text(20, 334, '装備スロット', {
+      fontSize: '14px', fill: '#ffdd66', fontFamily: 'monospace',
+    });
     for (let i = 0; i < 4; i++) {
       const label = p.equipment[i] ? p.equipment[i].name : '── なし ──';
-      const xOffset = (i % 2) * 230;
-      const yOffset = Math.floor(i / 2) * 22;
-      this.add.text(25 + xOffset, 364 + yOffset, `[${i + 1}] ${label}`, {
-        fontSize: '13px', fill: p.equipment[i] ? '#aaffaa' : '#666666', fontFamily: 'monospace',
+      this.add.text(25 + (i % 2) * 230, 354 + Math.floor(i / 2) * 22, `[${i + 1}] ${label}`, {
+        fontSize: '13px', fill: p.equipment[i] ? '#aaffaa' : '#555566', fontFamily: 'monospace',
       });
     }
 
     // 仕切り線
-    g.strokeLineShape(new Phaser.Geom.Line(10, 414, this.scale.width - 10, 414));
+    g.strokeLineShape(new Phaser.Geom.Line(10, 404, this.scale.width - 10, 404));
 
     // ── スキルスロット ──
-    this.add.text(20, 424, 'スキルスロット', {
-      fontSize: '15px', fill: '#ffdd66', fontFamily: 'monospace',
+    this.add.text(20, 412, 'スキルスロット', {
+      fontSize: '14px', fill: '#ffdd66', fontFamily: 'monospace',
     });
-
     for (let i = 0; i < 4; i++) {
       const label = p.skills[i] ? p.skills[i].name : '── なし ──';
-      const xOffset = (i % 2) * 230;
-      const yOffset = Math.floor(i / 2) * 22;
-      this.add.text(25 + xOffset, 446 + yOffset, `[${i + 1}] ${label}`, {
-        fontSize: '13px', fill: p.skills[i] ? '#aaaaff' : '#666666', fontFamily: 'monospace',
+      this.add.text(25 + (i % 2) * 230, 432 + Math.floor(i / 2) * 22, `[${i + 1}] ${label}`, {
+        fontSize: '13px', fill: p.skills[i] ? '#aaaaff' : '#555566', fontFamily: 'monospace',
       });
     }
 
     // マップへ戻るボタン
-    const backBtn = this.add.text(cx, 502, '◀ マップへ戻る', {
-      fontSize: '18px',
-      fill: '#ffffff',
-      fontFamily: 'monospace',
-      backgroundColor: '#334466',
-      padding: { x: 18, y: 8 },
+    const backBtn = this.add.text(cx, 490, '◀ マップへ戻る', {
+      fontSize: '17px', fill: '#ffffff', fontFamily: 'monospace',
+      backgroundColor: '#334466', padding: { x: 16, y: 8 },
     }).setOrigin(0.5).setInteractive({ useHandCursor: true });
 
     backBtn.on('pointerover', () => backBtn.setStyle({ fill: '#ffff00' }));
-    backBtn.on('pointerout', () => backBtn.setStyle({ fill: '#ffffff' }));
-    backBtn.on('pointerdown', () => {
-      this.scene.start('MapScene');
-    });
+    backBtn.on('pointerout',  () => backBtn.setStyle({ fill: '#ffffff' }));
+    backBtn.on('pointerdown', () => this.scene.start('MapScene'));
   }
 
-  // ステータス1行分（ラベル・[-]・数値・[+]）を作る
-  createStatRow(label, key, x, y) {
+  // ステータス強化の1行を作る
+  createUpgradeRow(stat, x, y) {
     const p = playerData;
+    const getCost = () => stat.baseCost + p.upgradeCount[stat.key] * stat.inc;
 
     // ラベル
-    this.add.text(x, y, label, {
-      fontSize: '14px', fill: '#aaaaaa', fontFamily: 'monospace',
+    this.add.text(x, y, stat.label, {
+      fontSize: '13px', fill: '#aaaaaa', fontFamily: 'monospace',
     });
-
-    // [-] ボタン
-    const minusBtn = this.add.text(x + 110, y, '[-]', {
-      fontSize: '14px', fill: '#ff8888', fontFamily: 'monospace',
-    }).setInteractive({ useHandCursor: true });
 
     // 現在値
-    const valText = this.add.text(x + 160, y, String(p[key]).padStart(3, ' '), {
-      fontSize: '14px', fill: '#ffffff', fontFamily: 'monospace',
+    const valText = this.add.text(x + 148, y, String(stat.getVal()), {
+      fontSize: '13px', fill: '#ffffff', fontFamily: 'monospace',
     }).setOrigin(0.5, 0);
 
-    // [+] ボタン
-    const plusBtn = this.add.text(x + 195, y, '[+]', {
-      fontSize: '14px', fill: '#88ff88', fontFamily: 'monospace',
+    // 強化ボタン（必要XPを表示）
+    const btnText = this.add.text(x + 200, y, `[強化 ${getCost()}XP]`, {
+      fontSize: '12px', fill: '#44ffaa', fontFamily: 'monospace',
+      backgroundColor: '#1a3a2a', padding: { x: 5, y: 2 },
     }).setInteractive({ useHandCursor: true });
 
-    // [-] を押したとき：ポイントを1つ取り戻す（最小値は1）
-    minusBtn.on('pointerdown', () => {
-      if (p[key] > 1) {
-        p[key]--;
-        p.statPoints++;
-        valText.setText(String(p[key]).padStart(3, ' '));
-        this.pointsText.setText(`残りポイント：${p.statPoints}`);
-      }
-    });
+    btnText.on('pointerover', () => btnText.setStyle({ fill: '#aaffcc' }));
+    btnText.on('pointerout',  () => btnText.setStyle({ fill: '#44ffaa' }));
 
-    // [+] を押したとき：ポイントを1つ使って上げる
-    plusBtn.on('pointerdown', () => {
-      if (p.statPoints > 0) {
-        p[key]++;
-        p.statPoints--;
-        valText.setText(String(p[key]).padStart(3, ' '));
-        this.pointsText.setText(`残りポイント：${p.statPoints}`);
+    btnText.on('pointerdown', () => {
+      const cost = getCost();
+      if (p.exp >= cost) {
+        p.exp -= cost;
+        stat.apply();
+        p.upgradeCount[stat.key]++;
+
+        // 表示を更新
+        valText.setText(String(stat.getVal()));
+        btnText.setText(`[強化 ${getCost()}XP]`);
+        this.expText.setText(`所持XP：${p.exp}`);
+      } else {
+        // XP不足の警告を一時表示
+        this.warnText.setVisible(true);
+        this.time.delayedCall(1500, () => this.warnText.setVisible(false));
       }
     });
   }
