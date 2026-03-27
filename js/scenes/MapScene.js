@@ -159,8 +159,10 @@ class MapScene extends Phaser.Scene {
 
   // ノードが現在ロック（押せない）状態かどうかを判定する
   isNodeLocked(node, map) {
-    // 次へ・戻るは全ての戦闘・イベントをクリアするまでロック
-    if (node.type === 'next' || node.type === 'prev') {
+    // 戻るはいつでも使える
+    if (node.type === 'prev') return false;
+    // 次へは全ての戦闘・イベントをクリアするまでロック
+    if (node.type === 'next') {
       return map.nodes.some(n =>
         (n.type === 'battle' || n.type === 'event') && !n.cleared
       );
@@ -307,11 +309,11 @@ class MapScene extends Phaser.Scene {
     const startY = 100;
     const spacing = 80;
 
-    // ロックされておらず、かつクリアされていないノードを全て探す
+    // ロックされておらず、かつ未完了のノードを探す（shopは常に利用可能なので対象外）
     const availableNodes = map.nodes.filter(node =>
       !this.isNodeLocked(node, map) &&
-      !(node.type === 'battle' && node.cleared) &&
-      node.type !== 'next' && node.type !== 'prev'
+      !(node.cleared) &&
+      node.type !== 'next' && node.type !== 'prev' && node.type !== 'shop'
     );
 
     availableNodes.forEach(node => {
@@ -376,7 +378,6 @@ class MapScene extends Phaser.Scene {
       playerData.currentMap = Math.max(playerData.currentMap - 1, 0);
       this.scene.restart();
     } else if (node.type === 'shop') {
-      node.cleared = true; // 訪問済みにしてロック解放
       this.scene.start('ShopScene', { mapIndex: this.mapIndex });
     } else if (node.type === 'event') {
       this.showEvent(node);

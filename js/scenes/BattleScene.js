@@ -13,6 +13,7 @@ class BattleScene extends Phaser.Scene {
 
     // バトルの状態管理
     this.battleOver = false;
+    this.guardActive = false; // ガードスキルが発動中かどうか
 
     // AGI比較で先攻後攻を決定
     this.playerFirst = playerData.agi >= this.enemy.agi;
@@ -308,6 +309,20 @@ class BattleScene extends Phaser.Scene {
       this.setMessage(`ヒール！ HP +${restored} 回復した！`);
       this.refreshBars();
       this.time.delayedCall(900, () => this.enemyTurn());
+    } else if (key === 'fire') {
+      const dmg = Math.max(1, Math.floor(playerData.attack * 2) - Math.floor(this.enemy.defense / 2) + Phaser.Math.Between(-2, 2));
+      this.enemy.hp -= dmg;
+      this.setMessage(`ファイア！ 炎が ${dmg} のダメージを与えた！`);
+      this.refreshBars();
+      if (this.enemy.hp <= 0) {
+        this.time.delayedCall(700, () => this.winBattle());
+      } else {
+        this.time.delayedCall(900, () => this.enemyTurn());
+      }
+    } else if (key === 'guard') {
+      this.guardActive = true;
+      this.setMessage('ガード！ 次の攻撃のダメージが半減する！');
+      this.time.delayedCall(900, () => this.enemyTurn());
     }
   }
 
@@ -396,7 +411,11 @@ class BattleScene extends Phaser.Scene {
   // 敵のターン
   enemyTurn() {
     if (this.battleOver) return;
-    const dmg = Math.max(1, this.enemy.attack - Math.floor(playerData.defense / 2) + Phaser.Math.Between(-1, 1));
+    let dmg = Math.max(1, this.enemy.attack - Math.floor(playerData.defense / 2) + Phaser.Math.Between(-1, 1));
+    if (this.guardActive) {
+      dmg = Math.max(1, Math.floor(dmg / 2));
+      this.guardActive = false;
+    }
     playerData.hp -= dmg;
     this.setMessage(`${this.enemy.name}の攻撃！ ${dmg} のダメージを受けた！`);
     this.refreshBars();
@@ -467,7 +486,16 @@ class BattleScene extends Phaser.Scene {
 const skillData = {
   smash: { name: 'スマッシュ', spCost: 8,  desc: '1.5倍ダメージ' },
   heal:  { name: 'ヒール',    spCost: 12, desc: 'HP+30回復' },
+  fire:  { name: 'ファイア',  spCost: 15, desc: '魔法で2倍ダメージ' },
+  guard: { name: 'ガード',    spCost: 10, desc: '次の被ダメージ半減' },
 };
+
+// 習得可能なスキル一覧（XPを消費して習得）
+const learnableSkills = [
+  { key: 'heal',  cost: 20 },
+  { key: 'fire',  cost: 35 },
+  { key: 'guard', cost: 28 },
+];
 
 // アイテムデータ
 const itemData = {
