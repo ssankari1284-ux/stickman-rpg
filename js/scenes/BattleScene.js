@@ -478,10 +478,10 @@ const itemData = {
 
 // 敵データ一覧（agiを追加）
 const enemyData = {
-  slime:  { name: 'スライム', hp: 20, maxHp: 20, attack: 5,  defense: 2, agi: 3,  expReward: 12, coinReward: 5  },
-  goblin: { name: 'ゴブリン', hp: 35, maxHp: 35, attack: 8,  defense: 3, agi: 5,  expReward: 20, coinReward: 10 },
-  wolf:   { name: 'オオカミ', hp: 45, maxHp: 45, attack: 11, defense: 4, agi: 8,  expReward: 28, coinReward: 12 },
-  bat:    { name: 'コウモリ', hp: 25, maxHp: 25, attack: 7,  defense: 2, agi: 9,  expReward: 16, coinReward: 8  },
-  spider: { name: 'クモ',     hp: 30, maxHp: 30, attack: 9,  defense: 3, agi: 7,  expReward: 22, coinReward: 10 },
-  orc:    { name: 'オーク',   hp: 60, maxHp: 60, attack: 14, defense: 6, agi: 4,  expReward: 40, coinReward: 20 },
+  slime:  { name: 'スライム', hp: 20, maxHp: 20, attack: 5,  defense: 2, agi: 3,  expReward: 18, coinReward: 8  },
+  goblin: { name: 'ゴブリン', hp: 35, maxHp: 35, attack: 8,  defense: 3, agi: 5,  expReward: 28, coinReward: 14 },
+  wolf:   { name: 'オオカミ', hp: 45, maxHp: 45, attack: 11, defense: 4, agi: 8,  expReward: 38, coinReward: 18 },
+  bat:    { name: 'コウモリ', hp: 25, maxHp: 25, attack: 7,  defense: 2, agi: 9,  expReward: 22, coinReward: 10 },
+  spider: { name: 'クモ',     hp: 30, maxHp: 30, attack: 9,  defense: 3, agi: 7,  expReward: 30, coinReward: 14 },
+  orc:    { name: 'オーク',   hp: 60, maxHp: 60, attack: 14, defense: 6, agi: 4,  expReward: 55, coinReward: 28 },
 };
